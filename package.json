@@ -1,0 +1,23 @@
+{
+  "name": "amazing-site",
+  "version": "1.0.0",
+  "description": "amazing-site",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olivercooktime/amazing-site.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/olivercooktime/amazing-site/issues"
+  },
+  "homepage": "https://github.com/olivercooktime/amazing-site#readme",
+  "dependencies": {
+    "sass": "^1.62.0"
+  }
+}
