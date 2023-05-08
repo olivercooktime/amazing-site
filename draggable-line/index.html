@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        :root {
+            --offset-px: 5px;
+        }
+
+        .box {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f0f0f0f0;
+        }
+
+        .ant-line {
+            position: absolute;
+            background-position-y: center;
+            background-size: auto 100%;
+            animation: move 1s linear 0s infinite;
+        }
+
+        .point {
+            position: absolute;
+            z-index: 9;
+            content: '';
+            display: inline-block;
+            border: 1px solid #333;
+            background-color: #fff;
+            border-radius: 50%;
+            cursor: move;
+            transform: scale(2);
+        }
+
+        @keyframes move {
+            from {
+                background-position-x: calc(0 * var(--offset-px));
+            }
+            to {
+                background-position-x: calc(10 * var(--offset-px));
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <div class="point"></div>
+        <div class="ant-line"></div>
+        <div class="point"></div>
+        <div class="ant-line"></div>
+        <div class="point"></div>
+        <div class="ant-line"></div>
+        <div class="point"></div>
+        <div class="ant-line"></div>
+        <div class="point"></div>
+    </div>
+    <script>
+
+        const points = [[100, 100], [200, 200], [300, 300], [400, 400], [500, 500]];
+        let lineList = Array.from(document.querySelectorAll('.ant-line'));
+        let prev = [0, 0];
+        let moveIndex = -1;
+        let active = false;
+
+        render();
+        bindEvent();
+
+        function render() {
+            lineList.forEach((lineEl, index) => {
+                const p1 = points[index];
+                const p2 = points[index + 1];
+                renderPoint(p1, p2, lineEl);
+            })
+        }
+        function bindEvent() {
+            lineList.forEach(line => {
+                line.addEventListener('click', (evt) => {
+                    evt.stopPropagation();
+                    active = true;
+                    render();
+                });
+            });
+            let pointList = Array.from(document.querySelectorAll('.point'));
+            pointList.forEach((point, index) => {
+                point.addEventListener('mousedown', (event) => {
+                    event.stopImmediatePropagation();
+                    const { clientX, clientY } = event;
+                    prev = [clientX, clientY];
+                    moveIndex = index;
+                    document.addEventListener('mousemove', docmove)
+                    document.addEventListener('mouseup', () => {
+                        document.removeEventListener('mousemove', docmove)
+                    });
+                });
+                point.addEventListener('click', (evt) => {
+                    evt.stopPropagation();
+                });
+            });
+            document.querySelector('.box').addEventListener('click', (evt) => {
+                evt.stopPropagation();
+                active = false;
+                render();
+            })
+        }
+        function docmove(event) {
+            const { clientX, clientY } = event;
+            if (!clientX && !clientY) return;
+
+            const offsetX = clientX - prev[0];
+            const offsetY = clientY - prev[1];
+            const movingP = points[moveIndex];
+            movingP[0] += offsetX;
+            movingP[1] += offsetY;
+            prev = [clientX, clientY];
+            render();
+        }
+        function getDistance(p1, p2) {
+            const p1x = p1[0];
+            const p1y = p1[1];
+            const p2x = p2[0];
+            const p2y = p2[1];
+
+            var distance = Math.sqrt(Math.pow(p2x - p1x, 2) + Math.pow(p2y - p1y, 2));
+            return distance;
+        }
+        function calculateAngle(p1, p2) {
+            const p1x = p1[0];
+            const p1y = p1[1];
+            const p2x = p2[0];
+            const p2y = p2[1];
+            var angleRadians = Math.atan2(p2y - p1y, p2x - p1x);
+            var angleDegrees = (angleRadians * 180) / Math.PI;
+            return angleDegrees;
+        }
+        function renderPoint(p1, p2, lineEl) {
+            const head = lineEl.previousElementSibling;
+            const tail = lineEl.nextElementSibling;
+            const lineHeight = 5;
+            const lineColor = 'red';
+
+            head.style.left = p1[0] + 'px';
+            head.style.top = p1[1] + 'px';
+            head.style.display = active ? '' : 'none';
+
+            tail.style.left = p2[0] + 'px';
+            tail.style.top = p2[1] + 'px';
+            tail.style.display = active ? '' : 'none';
+
+            head.style.width = lineHeight + 'px';
+            head.style.height = lineHeight + 'px';
+            tail.style.width = lineHeight + 'px';
+            tail.style.height = lineHeight + 'px';
+            
+            lineEl.style.left = p1[0] + 'px';
+            lineEl.style.top = p1[1] + 'px';
+            lineEl.style.background = `url('${getSvgBg(lineHeight, lineColor)}')`;
+            lineEl.style.width = getDistance(p1, p2) + 'px';
+            lineEl.style.height = lineHeight + 'px';
+            lineEl.style.transform = `rotate(${calculateAngle(p1, p2)}deg)`;
+            lineEl.style.transformOrigin = 'left';
+        }
+
+        function getSvgBg(height, color = 'red') {
+            document.documentElement.style.setProperty('--offset-px', height / 2 + 'px'); /* 使用JavaScript更改颜色变量的值 */
+            return 'data:image/svg+xml;utf8,' +
+                `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="${height * 5}" height="${height}">` +
+                `<line stroke-dasharray="${height * 3}, ${height * 2}" stroke-width="${height}" stroke="${color}" ` +
+                `stroke-linecap="" x1="${height / 2}" y1="${height / 2}" x2="${height * 5}" y2="${height / 2}" /></svg>`;
+        }
+    </script>
+</body>
+
+</html>
